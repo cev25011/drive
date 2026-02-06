@@ -1,86 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>Arduino Driving Simulator</title>
+    <meta charset="UTF-8">
+    <title>NEO-DRIVE: ACQUISITION INTERFACE</title>
     <style>
-        body { text-align: center; background: #333; color: white; font-family: sans-serif; }
-        #gameCanvas { background: #555; border: 5px solid #fff; margin-top: 20px; }
-        .menu { margin: 20px; padding: 20px; border: 1px solid #777; }
-    </style>
-</head>
-<body>
-    <h1>🚗 아두이노 운전 면허 시험장</h1>
-
-    <div class="menu">
-        <button onclick="connectArduino()">1. 아두이노 연결</button>
-        <select id="carSelect">
-            <option value="red">스포츠카 (빠름)</option>
-            <option value="blue">트럭 (안정적)</option>
-        </select>
-        <button onclick="startExam()">2. 면허 시험 시작</button>
-    </div>
-
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
-    <p id="status">상태: 대기 중...</p>
-
-    <script>
-        let car = { x: 100, y: 200, angle: 0, speed: 0, color: 'red' };
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // 아두이노 데이터 수신 변수
-        let wheelInput = 512; 
-        let gasInput = 0;
-
-        async function connectArduino() {
-            try {
-                const port = await navigator.serial.requestPort();
-                await port.open({ baudRate: 9600 });
-                document.getElementById('status').innerText = "상태: 아두이노 연결됨";
-                
-                const reader = port.readable.getReader();
-                while (true) {
-                    const { value, done } = await reader.read();
-                    if (done) break;
-                    const data = new TextDecoder().decode(value);
-                    const values = data.split(',');
-                    if(values.length === 2) {
-                        wheelInput = parseInt(values[0]);
-                        gasInput = parseInt(values[1]);
-                    }
-                }
-            } catch (err) { console.error(err); }
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --bg-dark: #050505;
         }
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 자동차 로직 업데이트
-            if (gasInput === 1) car.speed = Math.min(car.speed + 0.2, 5);
-            else car.speed = Math.max(car.speed - 0.1, 0);
-
-            // 핸들 조작 (512가 중앙)
-            let turnLimit = (wheelInput - 512) / 512;
-            car.angle += turnLimit * 0.05;
-
-            car.x += Math.cos(car.angle) * car.speed;
-            car.y += Math.sin(car.angle) * car.speed;
-
-            // 자동차 그리기
-            ctx.save();
-            ctx.translate(car.x, car.y);
-            ctx.rotate(car.angle);
-            ctx.fillStyle = document.getElementById('carSelect').value;
-            ctx.fillRect(-20, -10, 40, 20);
-            ctx.restore();
-
-            requestAnimationFrame(draw);
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            margin: 0;
         }
 
-        function startExam() {
-            document.getElementById('status').innerText = "상태: 시험 진행 중 (코스를 이탈하지 마세요!)";
-            draw();
+        h1 {
+            text-shadow: 0 0 10px var(--neon-blue);
+            letter-spacing: 5px;
+            margin-top: 20px;
         }
-    </script>
-</body>
-</html>
+
+        #ui-layer {
+            position: absolute;
+            top: 80px;
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .neon-btn {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .neon-btn:hover {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        canvas {
+            border: 2px solid var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink);
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+            margin-top: 100px;
+        }
+
+        #dashboard {
+            margin-top: 20px;
+            display: flex;
+            gap: 50px;
+            font-size: 1.2rem;
